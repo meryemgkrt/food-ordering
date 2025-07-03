@@ -1,5 +1,5 @@
 import Head from "next/head";
-import "../styles/globals.css";
+
 
 
 import { config } from "@fortawesome/fontawesome-svg-core";
