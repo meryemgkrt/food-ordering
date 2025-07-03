@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  padding: 0;
+  margin: 0;
+  font-family: "Open Sans", sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+}
+
+.btn-primary {
+  @apply text-white px-[30px] py-[8px] rounded-3xl bg-primary cursor-pointer hover:opacity-70 transition-all;
+}
+
+.slick-dots {
+  @apply !flex justify-start w-full;
+}
+
+.slick-dots .slick-active div {
+  @apply bg-primary;
+}
+
+.slick-dots div {
+  @apply !m-0 !mt-8;
+}
+
+.date-input {
+  position: relative;
+  width: 100%;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* globals.css */
+.scrollbar-custom {
+  scrollbar-width: thin; /* Tarayıcı desteği için */
+  scrollbar-color: #222831 #f1f1f1; /* Scrollbar rengi ve arka plan rengi */
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px; /* Scrollbar genişliği */
+  height: 8px; /* Scrollbar yüksekliği */
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Scrollbar arka plan rengi */
+  border-radius: 10px; /* Köşeler */
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #222831; /* Scrollbar rengi */
+  border-radius: 10px; /* Köşeler */
+  border: 2px solid #f1f1f1; /* Thumb çevresine boşluk */
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #222831; /* Hover rengi */
+}
+
+.table-auto th {
+  min-width: 100px; /* veya uygun gördüğünüz herhangi bir değer */
+}
