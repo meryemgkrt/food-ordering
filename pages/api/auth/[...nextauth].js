@@ -6,10 +6,11 @@ import clientPromise from "../../../util/mongo";
 import User from "../../../models/User";
 import dbConnect from "../../../util/dbConnect";
 import bcrypt from "bcryptjs";
+
 dbConnect();
 
 export default NextAuth({
-  /*  adapter: MongoDBAdapter(clientPromise), */
+  adapter: MongoDBAdapter(clientPromise),
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID,
@@ -17,35 +18,59 @@ export default NextAuth({
     }),
     CredentialsProvider({
       name: "Credentials",
-
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        email: {
+          label: "Email",
+          type: "email",
+          placeholder: "john@example.com",
+        },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required!");
+        }
+
         const email = credentials.email;
         const password = credentials.password;
+
+        // User lookup
         const user = await User.findOne({ email: email });
         if (!user) {
-          throw new Error("You haven't registered yet!");
+          throw new Error("No user found with this email.");
         }
-        if (user) {
-          return signInUser({ user, password });
+
+        // Verify password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          throw new Error("Incorrect password!");
         }
+
+        return user;
       },
     }),
   ],
   pages: {
-    signIn: "/auth/login",
+    signIn: "/auth/login", // Redirect to custom login page
   },
-  database: process.env.MONGODB_URI,
-  secret: "secret",
+  session: {
+    strategy: "jwt", // Use JWT for session management
+  },
+  callbacks: {
+    // Add user id to JWT token
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    // Transfer JWT token information to session
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id;
+      }
+      return session;
+    },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 });
-
-const signInUser = async ({ user, password }) => {
-  const isMAtch = await bcrypt.compare(password, user.password);
-  if (!isMAtch) {
-    throw new Error("Incorrect password!");
-  }
-  return user;
-};

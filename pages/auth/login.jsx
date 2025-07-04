@@ -11,8 +11,8 @@ import {
   FaCheck,
   FaEye,
   FaEyeSlash,
+  FaGithub,
 } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "react-toastify";
@@ -119,15 +119,14 @@ const Login = () => {
     }
   }, [session, status, loading, redirecting, handleSuccessfulLogin]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGithubSignIn = async () => {
     try {
-      await signIn("google", {
+      await signIn("github", {
         callbackUrl: "/profile",
-        prompt: "select_account",
       });
     } catch (error) {
-      toast.error("Google giriş işlemi başarısız. Lütfen tekrar deneyin.");
-      console.error("Google sign in error:", error);
+      toast.error("GitHub giriş işlemi başarısız. Lütfen tekrar deneyin.");
+      console.error("GitHub sign in error:", error);
     }
   };
 
@@ -250,11 +249,11 @@ const Login = () => {
         {/* Main Login Card */}
         <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 md:p-10 relative overflow-hidden">
           {/* Top gradient border */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500"></div>
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-yellow-400 rounded-2xl mb-6 shadow-lg transform hover:scale-105 transition-all duration-300">
               <FaSignInAlt className="text-2xl text-white" />
             </div>
 
@@ -263,10 +262,8 @@ const Login = () => {
             </h1>
             <p className="text-gray-600 text-sm">Hesabınıza giriş yapın</p>
 
-            <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
+            <div className="w-16 h-1 bg-gradient-to-r from-orange-500 to-yellow-400 mx-auto mt-4 rounded-full"></div>
           </div>
-
-        
 
           {/* Login Form */}
           <form onSubmit={formik.handleSubmit} className="space-y-5">
@@ -278,11 +275,11 @@ const Login = () => {
                     {/* Icon */}
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
                       <input.icon
-                        className={`text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300 ${
+                        className={`text-gray-400 group-focus-within:text-orange-500 transition-colors duration-300 ${
                           formik.touched[input.name] &&
                           !formik.errors[input.name] &&
                           formik.values[input.name]
-                            ? "text-blue-500"
+                            ? "text-orange-500"
                             : ""
                         }`}
                       />
@@ -302,8 +299,8 @@ const Login = () => {
                           : formik.touched[input.name] &&
                             !formik.errors[input.name] &&
                             formik.values[input.name]
-                          ? "border-blue-500 bg-blue-50/50 focus:border-blue-500 focus:shadow-blue-200/50"
-                          : "border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:shadow-blue-500/20"
+                          ? "border-orange-500 bg-orange-50/50 focus:border-orange-500 focus:shadow-orange-200/50"
+                          : "border-gray-200 hover:border-gray-300 focus:border-orange-500 focus:shadow-orange-500/20"
                       }`}
                     />
 
@@ -327,7 +324,7 @@ const Login = () => {
                       {formik.touched[input.name] &&
                         !formik.errors[input.name] &&
                         formik.values[input.name] && (
-                          <FaCheck className="text-blue-500 text-sm" />
+                          <FaCheck className="text-orange-500 text-sm" />
                         )}
                     </div>
                   </div>
@@ -344,7 +341,7 @@ const Login = () => {
                   {formik.touched[input.name] &&
                     !formik.errors[input.name] &&
                     formik.values[input.name] && (
-                      <div className="mt-2 text-blue-500 text-sm font-medium flex items-center space-x-1">
+                      <div className="mt-2 text-orange-500 text-sm font-medium flex items-center space-x-1">
                         <FaCheck className="text-xs" />
                         <span>Harika!</span>
                       </div>
@@ -357,13 +354,13 @@ const Login = () => {
             <div className="text-right">
               <Link
                 href="/auth/forgot-password"
-                className="text-blue-500 hover:text-purple-500 text-sm font-medium transition-colors duration-300 hover:underline"
+                className="text-orange-500 hover:text-yellow-500 text-sm font-medium transition-colors duration-300 hover:underline"
               >
                 Şifrenizi mi unuttunuz?
               </Link>
             </div>
 
-            {/* Google Sign In Button */}
+            {/* GitHub Sign In Button */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -377,11 +374,11 @@ const Login = () => {
 
             <button
               type="button"
-              onClick={handleGoogleSignIn}
-              className="w-full py-4 px-6 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:border-gray-300 hover:bg-gray-50 active:scale-95 flex items-center justify-center space-x-3 group"
+              onClick={handleGithubSignIn}
+              className="w-full py-4 px-6 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:border-gray-800 hover:bg-gray-800 hover:text-white active:scale-95 flex items-center justify-center space-x-3 group"
             >
-              <FcGoogle className="text-2xl group-hover:scale-110 transition-transform duration-300" />
-              <span>Google ile Giriş Yap</span>
+              <FaGithub className="text-2xl group-hover:scale-110 transition-transform duration-300" />
+              <span>GitHub ile Giriş Yap</span>
             </button>
 
             {/* Login Button */}
@@ -391,7 +388,7 @@ const Login = () => {
               className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 transform relative overflow-hidden group mt-4 ${
                 loading || !formik.isValid || redirecting
                   ? "bg-gray-400 cursor-not-allowed text-white"
-                  : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500 text-white hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30 active:scale-95"
+                  : "bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-yellow-400 hover:to-orange-500 text-white hover:scale-105 hover:shadow-xl hover:shadow-orange-500/30 active:scale-95"
               }`}
             >
               {!loading && !redirecting && formik.isValid && (
@@ -423,7 +420,7 @@ const Login = () => {
                 Hesabınız yok mu?{" "}
                 <Link
                   href="/auth/register"
-                  className="text-blue-500 hover:text-purple-500 font-semibold cursor-pointer transition-colors duration-300 hover:underline"
+                  className="text-orange-500 hover:text-yellow-500 font-semibold cursor-pointer transition-colors duration-300 hover:underline"
                 >
                   Hesap Oluşturun
                 </Link>
@@ -435,11 +432,17 @@ const Login = () => {
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl border border-blue-100">
             <p className="text-xs text-gray-600 text-center">
               Giriş yaparak{" "}
-              <a href="#" className="text-blue-500 hover:underline font-medium">
+              <a
+                href="#"
+                className="text-orange-500 hover:underline font-medium"
+              >
                 Kullanım Şartları
               </a>{" "}
               ve{" "}
-              <a href="#" className="text-blue-500 hover:underline font-medium">
+              <a
+                href="#"
+                className="text-orange-500 hover:underline font-medium"
+              >
                 Gizlilik Politikası
               </a>
               'nı kabul etmiş olursunuz
@@ -447,8 +450,8 @@ const Login = () => {
           </div>
 
           {/* Decorative Elements */}
-          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-br from-blue-500/20 to-purple-400/20 rounded-full blur-2xl"></div>
-          <div className="absolute -top-20 -left-20 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-xl"></div>
+          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-br from-orange-500/20 to-yellow-400/20 rounded-full blur-2xl"></div>
+          <div className="absolute -top-20 -left-20 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-xl"></div>
         </div>
 
         {/* Bottom Info Card */}
