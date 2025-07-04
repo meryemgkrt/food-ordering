@@ -1,64 +1,45 @@
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import OutsideClickHandler from "react-outside-click-handler";
-import Title from "./Title";
-import { IoIosCloseCircle } from "react-icons/io";
-import Image from "next/image";
+import Title from "../ui/Title";
+import { GiCancel } from "react-icons/gi";
+import axios from "axios";
 import LoginInput from "../form/LoginInput";
 import { useRouter } from "next/router";
-import { PacmanLoader } from "react-spinners";
+import PacmanLoader from "react-spinners/PacmanLoader";
 
-const SearchModal = ({ setIsOpenSearch }) => {
+const SearchModal = ({ setIsSearchModal }) => {
   const [products, setProducts] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
-  const router = useRouter();
-
-  // Mock data - API yerine kullanılacak
-  const mockProducts = [
-    {
-      _id: "1",
-      title: "Margherita Pizza",
-      img: "/image/f1.png",
-      prices: [12.99, 16.99, 20.99],
-    },
-    {
-      _id: "2",
-      title: "Cheeseburger",
-      img: "/image/f2.png",
-      prices: [8.99, 11.99, 14.99],
-    },
-    {
-      _id: "3",
-      title: "Caesar Salad",
-      img: "/image/f3.png",
-      prices: [7.99, 9.99, 12.99],
-    },
-    {
-      _id: "4",
-      title: "Chicken Wings",
-      img: "/image/f4.png",
-      prices: [9.99, 13.99, 17.99],
-    },
-    {
-      _id: "5",
-      title: "Pasta Carbonara",
-      img: "/image/f5.png",
-      prices: [11.99, 15.99, 19.99],
-    },
-  ];
+  // Güvenli kapatma fonksiyonu
+  const handleCloseModal = () => {
+    if (typeof setIsSearchModal === "function") {
+      setIsSearchModal(false);
+    }
+  };
 
   useEffect(() => {
-    // Mock API call simülasyonu
     const getProducts = async () => {
       setLoading(true);
-      // API gecikme simülasyonu
-      setTimeout(() => {
-        setProducts(mockProducts);
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/products`
+        );
+        setProducts(res.data);
+        setFiltered(res.data.slice(0, 5));
+      } catch (err) {
+        console.log(err);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
-    getProducts();
+
+    setTimeout(() => {
+      getProducts();
+    }, 1000);
   }, []);
 
   // Arama terimi değiştiğinde loading göster
@@ -77,42 +58,46 @@ const SearchModal = ({ setIsOpenSearch }) => {
     }
   }, [searchTerm]);
 
-  // Ürünleri filtreleme fonksiyonu
-  const filteredProducts = products.filter((product) =>
-    product.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const searchFilter = products
+      .filter((product) =>
+        product.title.toLowerCase().includes(value.toLowerCase())
+      )
+      .slice(0, 5);
+    setFiltered(searchFilter);
+  };
 
   // Ürün tıklandığında sayfaya git ve search modalı kapat
   const handleProductClick = (productId) => {
-    setIsOpenSearch(false);
+    handleCloseModal();
     router.push(`/product/${productId}`);
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <OutsideClickHandler onOutsideClick={() => setIsOpenSearch(false)}>
+      <OutsideClickHandler onOutsideClick={handleCloseModal}>
         <div className="bg-white text-black p-6 rounded-xl shadow-lg w-[600px] h-[600px] max-w-md">
           {/* Close Button */}
           <div className="flex justify-end">
-            <IoIosCloseCircle
+            <GiCancel
               className="text-primary hover:text-red-600 transition-all cursor-pointer"
               size={26}
-              onClick={() => setIsOpenSearch(false)}
+              onClick={handleCloseModal}
             />
           </div>
 
           {/* Title */}
-          <Title className="font-dancing font-bold text-3xl text-center text-warning mb-6">
-            Search
-          </Title>
+          <Title addClass="text-[40px] text-center mb-6">Search</Title>
 
           {/* Input */}
           <div className="flex flex-col items-center">
             <LoginInput
-              type="text"
               placeholder={searchTerm ? "" : "Type to search..."}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearch}
               className="w-full border border-primary p-2 rounded mb-6 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-50 focus:outline-none transition-all"
             />
 
@@ -120,46 +105,45 @@ const SearchModal = ({ setIsOpenSearch }) => {
             <ul className="w-full mt-4 max-h-[400px] overflow-y-auto">
               {loading ? (
                 <div className="text-center p-4">
-                  <PacmanLoader color="#f59e0b" size={20} />
+                  <PacmanLoader color="#fca311" size={20} />
                 </div>
               ) : searchLoading && searchTerm.length >= 2 ? (
                 <div className="text-center flex justify-center items-center text-gray-500 p-4">
-                  <PacmanLoader color="#f59e0b" size={20} />
+                  <PacmanLoader color="#fca311" size={20} />
                 </div>
               ) : (
                 <>
-                  {filteredProducts.map((product) => (
-                    <li
-                      onClick={() => handleProductClick(product?._id)}
-                      key={product._id}
-                      className="cursor-pointer flex items-center justify-between p-4 border-b hover:bg-primary hover:text-white transition-all"
-                    >
-                      <div className="flex items-center gap-x-3">
-                        <Image
-                          src={product.img || "/image/f1.png"}
-                          alt={product.title}
-                          width={48}
-                          height={48}
-                          className="rounded"
-                          loading="lazy"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                      </div>
-                      <span className="font-bold text-[16px]">
-                        {product.title}
-                      </span>
-                      <span className="font-bold text-[16px]">
-                        ${product.prices[0]}
-                      </span>
-                    </li>
-                  ))}
-                  {filteredProducts.length === 0 &&
-                    searchTerm.length >= 2 &&
-                    !searchLoading && (
-                      <div className="text-center text-gray-500 p-4">
-                        "No products found"
-                      </div>
-                    )}
+                  {filtered.length > 0 ? (
+                    filtered.map((product) => (
+                      <li
+                        onClick={() => handleProductClick(product?._id)}
+                        key={product._id}
+                        className="cursor-pointer flex items-center justify-between p-4 border-b hover:bg-primary hover:text-white transition-all"
+                      >
+                        <div className="flex items-center gap-x-3">
+                          <Image
+                            src={product?.img || "/image/f1.png"}
+                            alt={product?.title}
+                            width={48}
+                            height={48}
+                            className="rounded"
+                            loading="lazy"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
+                        <span className="font-bold text-[16px]">
+                          {product?.title}
+                        </span>
+                        <span className="font-bold text-[16px]">
+                          ${product.prices[0]}
+                        </span>
+                      </li>
+                    ))
+                  ) : searchTerm.length >= 2 && !searchLoading ? (
+                    <div className="text-center text-gray-500 p-4">
+                      "No products found"
+                    </div>
+                  ) : null}
                 </>
               )}
             </ul>

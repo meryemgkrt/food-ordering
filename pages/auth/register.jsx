@@ -11,8 +11,8 @@ import {
   FaCheck,
   FaEye,
   FaEyeSlash,
+  FaGithub,
 } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { toast } from "react-toastify";
@@ -25,15 +25,14 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleGoogleSignUp = async () => {
+  const handleGithubSignUp = async () => {
     try {
-      await signIn("google", {
+      await signIn("github", {
         callbackUrl: "/profile",
-        prompt: "select_account",
       });
     } catch (error) {
-      toast.error("Google kayıt işlemi başarısız. Lütfen tekrar deneyin.");
-      console.error("Google sign up error:", error);
+      toast.error("GitHub kayıt işlemi başarısız. Lütfen tekrar deneyin.");
+      console.error("GitHub sign up error:", error);
     }
   };
 
@@ -245,8 +244,6 @@ const Register = () => {
             <div className="w-16 h-1 bg-gradient-to-r from-orange-500 to-yellow-400 mx-auto mt-4 rounded-full"></div>
           </div>
 
-          
-
           {/* Register Form */}
           <form onSubmit={formik.handleSubmit} className="space-y-5">
             {/* Input Fields */}
@@ -400,7 +397,7 @@ const Register = () => {
               </div>
             )}
 
-            {/* Google Sign Up Button */}
+            {/* GitHub Sign Up Button */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -414,11 +411,11 @@ const Register = () => {
 
             <button
               type="button"
-              onClick={handleGoogleSignUp}
-              className="w-full py-4 px-6 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:border-gray-300 hover:bg-gray-50 active:scale-95 flex items-center justify-center space-x-3 group"
+              onClick={handleGithubSignUp}
+              className="w-full py-4 px-6 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:border-gray-800 hover:bg-gray-800 hover:text-white active:scale-95 flex items-center justify-center space-x-3 group"
             >
-              <FcGoogle className="text-2xl group-hover:scale-110 transition-transform duration-300" />
-              <span>Google ile Kayıt Ol</span>
+              <FaGithub className="text-2xl group-hover:scale-110 transition-transform duration-300" />
+              <span>GitHub ile Kayıt Ol</span>
             </button>
 
             {/* Register Button */}
