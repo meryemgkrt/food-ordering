@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useSelector } from "react-redux";
 
 const Header = () => {
-  const [isOpenSearch, setIsOpenSearch] = useState(false);
+  const [isSearchModal, setIsSearchModal] = useState(false); // ✅ Değiştirildi
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -283,20 +283,20 @@ const Header = () => {
 
               {/* Search Button - Dark Theme */}
               <button
-                onClick={() => setIsOpenSearch(true)}
-                className={getIconButtonClasses("", isOpenSearch)}
+                onClick={() => setIsSearchModal(true)} // ✅ Değiştirildi
+                className={getIconButtonClasses("", isSearchModal)} // ✅ Değiştirildi
                 title="Search Menu"
               >
                 <FaSearch
                   className={`transition-all duration-700 text-lg ${
-                    isOpenSearch
+                    isSearchModal // ✅ Değiştirildi
                       ? "text-primary rotate-180 scale-125"
                       : "text-white/90"
                   }`}
                 />
 
                 {/* Enhanced Active Indicator */}
-                {isOpenSearch && (
+                {isSearchModal && ( // ✅ Değiştirildi
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gradient-to-r from-primary to-purple-500 rounded-full animate-ping"></div>
                 )}
 
@@ -450,10 +450,11 @@ const Header = () => {
       )}
 
       {/* Enhanced Search Modal */}
-      {isOpenSearch && (
+      {isSearchModal && ( // ✅ Değiştirildi
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
           <div className="animate-in fade-in zoom-in duration-500 slide-in-from-top-4">
-            <SearchModal setIsOpenSearch={setIsOpenSearch} />
+            <SearchModal setIsSearchModal={setIsSearchModal} />{" "}
+            {/* ✅ Değiştirildi */}
           </div>
         </div>
       )}
