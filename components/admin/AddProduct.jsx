@@ -12,9 +12,10 @@ import {
   FaMoneyBillWave,
   FaUpload,
   FaImage,
+  FaCheckCircle,
 } from "react-icons/fa";
 
-const AddProduct = ({ setIsProductModal }) => {
+const AddProduct = ({ setIsProductModal, onProductAdded }) => {
   const [file, setFile] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -34,9 +35,11 @@ const AddProduct = ({ setIsProductModal }) => {
         setCategories(categoryTitles || []);
       } catch (error) {
         console.error("Error fetching categories:", error);
-        const defaultCategories = ["pizza", "burger", "salad", "drink"];
+        const defaultCategories = ["Pizza", "Burger", "Salad", "Drink"];
         setCategories(defaultCategories);
-        toast.error("Categories could not be loaded!");
+        toast.error(
+          "Kategoriler yüklenemedi, varsayılan kategoriler kullanılıyor!"
+        );
       } finally {
         setIsLoadingCategories(false);
       }
@@ -49,6 +52,19 @@ const AddProduct = ({ setIsProductModal }) => {
   const handleFileChange = (e, setFieldValue) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      // Dosya boyutu kontrolü (5MB)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        toast.error("Dosya boyutu 5MB'dan küçük olmalıdır!");
+        return;
+      }
+
+      // Dosya tipi kontrolü
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(selectedFile.type)) {
+        toast.error("Sadece JPG, PNG ve WebP formatları desteklenir!");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         setImageSrc(event.target.result);
@@ -62,7 +78,7 @@ const AddProduct = ({ setIsProductModal }) => {
   // Cloudinary Upload
   const handleUploadToCloudinary = async (file) => {
     if (!file) {
-      throw new Error("Please select an image");
+      throw new Error("Lütfen bir resim seçin");
     }
 
     const formData = new FormData();
@@ -84,7 +100,7 @@ const AddProduct = ({ setIsProductModal }) => {
       return response.data.secure_url;
     } catch (error) {
       console.error("Upload error:", error);
-      throw new Error(`Image upload failed: ${error.message}`);
+      throw new Error(`Resim yükleme başarısız: ${error.message}`);
     }
   };
 
@@ -94,47 +110,64 @@ const AddProduct = ({ setIsProductModal }) => {
       setIsLoading(true);
       setSubmitting(true);
 
-      // Upload image to Cloudinary
+      // Resim yükleme durumu kontrolü
+      if (!values.file) {
+        toast.error("Lütfen bir ürün resmi seçin!");
+        return;
+      }
+
+      // Cloudinary'ye resim yükleme
+      toast.info("Resim yükleniyor...", { autoClose: 2000 });
       const imageUrl = await handleUploadToCloudinary(values.file);
 
-      // Prepare product data
+      // Ürün verisini hazırlama
       const newProduct = {
-        title: values.title,
-        desc: values.description,
+        title: values.title.trim(),
+        desc: values.description.trim(),
         prices: [
-          parseFloat(values.prices.small),
-          parseFloat(values.prices.medium),
-          parseFloat(values.prices.large),
+          parseFloat(values.prices.small) || 0,
+          parseFloat(values.prices.medium) || 0,
+          parseFloat(values.prices.large) || 0,
         ],
         category: values.category.toLowerCase(),
         img: imageUrl,
         extras: values.extras.map((extra) => ({
-          text: extra.text,
-          prices: parseFloat(extra.price),
+          text: extra.text.trim(),
+          prices: parseFloat(extra.price) || 0,
         })),
       };
 
-      // Send data to backend
+      // Backend'e veri gönderme
+      toast.info("Ürün oluşturuluyor...", { autoClose: 2000 });
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/products`,
         newProduct
       );
 
-      // Success notification
-      toast.success("Product added successfully!");
+      // Başarı bildirimi
+      toast.success("🎉 Ürün başarıyla ana menüye eklendi!", {
+        position: "top-center",
+        autoClose: 3000,
+      });
 
-      // Reset form and close modal
+      // Eğer parent component'te ürün listesini güncelleme fonksiyonu varsa çağır
+      if (onProductAdded && typeof onProductAdded === "function") {
+        onProductAdded(response.data);
+      }
+
+      // Form sıfırlama ve modal kapatma
       resetForm();
       setImageSrc(null);
       setFile(null);
       setIsProductModal(false);
     } catch (error) {
       console.error("Submission error:", error);
-      toast.error(
-        `Product creation failed: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+      const errorMessage =
+        error.response?.data?.message || error.message || "Bilinmeyen hata";
+      toast.error(`Ürün oluşturulamadı: ${errorMessage}`, {
+        position: "top-center",
+        autoClose: 5000,
+      });
     } finally {
       setIsLoading(false);
       setSubmitting(false);
@@ -156,11 +189,9 @@ const AddProduct = ({ setIsProductModal }) => {
             <div>
               <Title className="text-2xl font-bold text-white flex items-center mb-2 font-dancing">
                 <FaPlus className="mr-3" />
-                Add New Product
+                Yeni Ürün Ekle
               </Title>
-              <p className="text-white/80">
-                Create a new product for your menu
-              </p>
+              <p className="text-white/80">Menünüze yeni bir ürün ekleyin</p>
             </div>
             <button
               onClick={() => setIsProductModal(false)}
@@ -199,7 +230,7 @@ const AddProduct = ({ setIsProductModal }) => {
                 <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-2xl border border-gray-200/50">
                   <label className="block text-lg font-bold text-gray-800 mb-4 flex items-center">
                     <FaImage className="text-purple-500 mr-2" />
-                    Product Image
+                    Ürün Resmi *
                   </label>
                   <div className="flex items-center space-x-4">
                     <label className="relative group cursor-pointer">
@@ -207,11 +238,11 @@ const AddProduct = ({ setIsProductModal }) => {
                         type="file"
                         onChange={(e) => handleFileChange(e, setFieldValue)}
                         className="hidden"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp"
                       />
                       <div className="flex items-center space-x-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 transform group-hover:scale-105 shadow-lg">
                         <FaUpload className="text-lg" />
-                        <span>Choose Image</span>
+                        <span>Resim Seç</span>
                       </div>
                     </label>
                     {imageSrc && (
@@ -221,10 +252,15 @@ const AddProduct = ({ setIsProductModal }) => {
                           alt="Preview"
                           className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-lg group-hover:scale-110 transition-transform duration-300"
                         />
-                        <div className="absolute inset-0 rounded-2xl bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 rounded-2xl bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <FaCheckCircle className="text-green-400 text-2xl" />
+                        </div>
                       </div>
                     )}
                   </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Desteklenen formatlar: JPG, PNG, WebP (Max: 5MB)
+                  </p>
                   {errors.file && touched.file && (
                     <div className="text-red-500 text-sm mt-2 flex items-center">
                       <span className="mr-1">⚠️</span>
@@ -238,13 +274,13 @@ const AddProduct = ({ setIsProductModal }) => {
                   <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-2xl border border-blue-200/50">
                     <label className="block text-lg font-bold text-gray-800 mb-3 flex items-center">
                       <FaTag className="text-blue-500 mr-2" />
-                      Product Title
+                      Ürün Adı *
                     </label>
                     <Field
                       type="text"
                       name="title"
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-blue-500 focus:outline-none transition-colors"
-                      placeholder="Enter product title"
+                      placeholder="Örn: Margherita Pizza"
                     />
                     {errors.title && touched.title && (
                       <div className="text-red-500 text-sm mt-2 flex items-center">
@@ -257,12 +293,12 @@ const AddProduct = ({ setIsProductModal }) => {
                   <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-200/50">
                     <label className="block text-lg font-bold text-gray-800 mb-3 flex items-center">
                       <FaInfoCircle className="text-purple-500 mr-2" />
-                      Category
+                      Kategori *
                     </label>
                     {isLoadingCategories ? (
                       <div className="text-gray-500 py-3 flex items-center">
                         <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-                        Loading categories...
+                        Kategoriler yükleniyor...
                       </div>
                     ) : (
                       <Field
@@ -290,14 +326,14 @@ const AddProduct = ({ setIsProductModal }) => {
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-200/50">
                   <label className="block text-lg font-bold text-gray-800 mb-3 flex items-center">
                     <FaInfoCircle className="text-green-500 mr-2" />
-                    Description
+                    Açıklama *
                   </label>
                   <Field
                     as="textarea"
                     name="description"
                     rows="4"
                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-green-500 focus:outline-none transition-colors resize-none"
-                    placeholder="Enter product description"
+                    placeholder="Ürününüzün detaylı açıklamasını yazın..."
                   />
                   {errors.description && touched.description && (
                     <div className="text-red-500 text-sm mt-2 flex items-center">
@@ -311,27 +347,32 @@ const AddProduct = ({ setIsProductModal }) => {
                 <div className="bg-gradient-to-br from-yellow-50 to-primary/10 p-6 rounded-2xl border border-yellow-200/50">
                   <label className="block text-lg font-bold text-gray-800 mb-4 flex items-center">
                     <FaMoneyBillWave className="text-yellow-500 mr-2" />
-                    Pricing (Small, Medium, Large)
+                    Fiyatlandırma (Küçük, Orta, Büyük) *
                   </label>
                   <div className="grid grid-cols-3 gap-4">
-                    {["small", "medium", "large"].map((size) => (
-                      <div key={size}>
-                        <label className="block text-sm font-semibold text-gray-600 mb-2 capitalize">
-                          {size}
+                    {[
+                      { key: "small", label: "Küçük" },
+                      { key: "medium", label: "Orta" },
+                      { key: "large", label: "Büyük" },
+                    ].map((size) => (
+                      <div key={size.key}>
+                        <label className="block text-sm font-semibold text-gray-600 mb-2">
+                          {size.label}
                         </label>
                         <Field
                           type="number"
-                          name={`prices.${size}`}
+                          name={`prices.${size.key}`}
                           min="0"
                           step="0.01"
                           className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-yellow-500 focus:outline-none transition-colors"
-                          placeholder={`${size} price`}
+                          placeholder={`${size.label} fiyat (₺)`}
                         />
-                        {errors.prices?.[size] && touched.prices?.[size] && (
-                          <div className="text-red-500 text-sm mt-1">
-                            {errors.prices[size]}
-                          </div>
-                        )}
+                        {errors.prices?.[size.key] &&
+                          touched.prices?.[size.key] && (
+                            <div className="text-red-500 text-sm mt-1">
+                              {errors.prices[size.key]}
+                            </div>
+                          )}
                       </div>
                     ))}
                   </div>
@@ -341,7 +382,7 @@ const AddProduct = ({ setIsProductModal }) => {
                 <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border border-indigo-200/50">
                   <label className="block text-lg font-bold text-gray-800 mb-4 flex items-center">
                     <FaPlus className="text-indigo-500 mr-2" />
-                    Extra Options
+                    Ekstra Seçenekler
                   </label>
 
                   <FieldArray name="extras">
@@ -351,7 +392,7 @@ const AddProduct = ({ setIsProductModal }) => {
                           <Field
                             type="text"
                             name="extraText"
-                            placeholder="Extra name (e.g., Extra Cheese)"
+                            placeholder="Ekstra adı (Örn: Ekstra Peynir)"
                             className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-indigo-500 focus:outline-none transition-colors"
                           />
                           <Field
@@ -359,18 +400,20 @@ const AddProduct = ({ setIsProductModal }) => {
                             name="extraPrice"
                             min="0"
                             step="0.01"
-                            placeholder="Additional price"
+                            placeholder="Ek fiyat (₺)"
                             className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-indigo-500 focus:outline-none transition-colors"
                           />
                           <button
                             type="button"
                             onClick={() => {
-                              const extraText = values.extraText;
+                              const extraText = values.extraText?.trim();
                               const extraPrice = values.extraPrice;
                               if (extraText && extraPrice) {
                                 push({ text: extraText, price: extraPrice });
                                 setFieldValue("extraText", "");
                                 setFieldValue("extraPrice", "");
+                              } else {
+                                toast.warn("Ekstra adı ve fiyat boş olamaz!");
                               }
                             }}
                             className="group relative bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl overflow-hidden"
@@ -378,7 +421,7 @@ const AddProduct = ({ setIsProductModal }) => {
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                             <div className="relative z-10 flex items-center justify-center py-3">
                               <FaPlus className="mr-2" />
-                              Add Extra
+                              Ekstra Ekle
                             </div>
                           </button>
                         </div>
@@ -387,7 +430,7 @@ const AddProduct = ({ setIsProductModal }) => {
                         {values.extras.length > 0 && (
                           <div className="space-y-2">
                             <h6 className="font-semibold text-gray-700">
-                              Added Extras:
+                              Eklenen Ekstralar:
                             </h6>
                             <div className="flex flex-wrap gap-2">
                               {values.extras.map((extra, index) => (
@@ -401,7 +444,7 @@ const AddProduct = ({ setIsProductModal }) => {
                                     {extra.text}
                                   </span>
                                   <span className="text-green-600 font-bold">
-                                    +${parseFloat(extra.price).toFixed(2)}
+                                    +₺{parseFloat(extra.price).toFixed(2)}
                                   </span>
                                   <FaTimes className="text-red-500 group-hover:scale-110 transition-transform duration-300" />
                                 </button>
@@ -421,7 +464,7 @@ const AddProduct = ({ setIsProductModal }) => {
                     onClick={() => setIsProductModal(false)}
                     className="px-6 py-3 bg-gray-500 text-white rounded-2xl font-bold transition-all duration-300 hover:bg-gray-600 transform hover:scale-105 shadow-lg"
                   >
-                    Cancel
+                    İptal
                   </button>
                   <button
                     type="submit"
@@ -433,12 +476,12 @@ const AddProduct = ({ setIsProductModal }) => {
                       {isSubmitting || isLoading ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Creating...</span>
+                          <span>Oluşturuluyor...</span>
                         </>
                       ) : (
                         <>
                           <FaPlus className="text-lg" />
-                          <span>Create Product</span>
+                          <span>Ürünü Menüye Ekle</span>
                         </>
                       )}
                     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import Title from "../ui/Title";
 import MenuItem from "./MenuItem";
 
@@ -8,6 +9,9 @@ const MenuWrapper = ({ categoryList, productList }) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [displayCount, setDisplayCount] = useState(6); // Başlangıçta gösterilecek ürün sayısı
   const [showLimited, setShowLimited] = useState(false); // View Menu butonu için state
+
+  // Redux cart state'ini al
+  const cart = useSelector((state) => state.cart);
 
   // Filter products based on active category
   useEffect(() => {
@@ -44,6 +48,12 @@ const MenuWrapper = ({ categoryList, productList }) => {
   // Displayed products (slice based on displayCount)
   const displayedProducts = filteredProducts.slice(0, displayCount);
 
+  // Sepetteki ürünleri kontrol et ve badge göster
+  const getCartItemCount = (productId) => {
+    const cartItem = cart.products?.find((item) => item._id === productId);
+    return cartItem ? cartItem.quantity : 0;
+  };
+
   return (
     <div className="container mx-auto mb-16">
       <div className="flex flex-col items-center w-full">
@@ -51,6 +61,18 @@ const MenuWrapper = ({ categoryList, productList }) => {
         <Title className="text-center font-dancing text-4xl font-bold text-primary mb-8">
           Our Menu
         </Title>
+
+        {/* Cart Summary - Sepetteki ürün sayısını göster */}
+        {cart.products && cart.products.length > 0 && (
+          <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="flex items-center justify-center gap-2 text-primary">
+              <span className="font-semibold">Cart: {cart.quantity} items</span>
+              <span className="text-sm">
+                Total: ${cart.total?.toFixed(2) || "0.00"}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Category Buttons */}
         <div className="flex justify-center gap-3 w-full mt-14 flex-wrap">
@@ -90,16 +112,26 @@ const MenuWrapper = ({ categoryList, productList }) => {
           <>
             {/* Product Grid */}
             <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6">
-              {displayedProducts.map((product) => (
-                <MenuItem
-                  product={product}
-                  key={product._id}
-                  img={product.img}
-                  title={product.title}
-                  description={product.desc}
-                  prices={product.prices}
-                />
-              ))}
+              {displayedProducts.map((product) => {
+                const cartCount = getCartItemCount(product._id);
+                return (
+                  <div key={product._id} className="relative">
+                    <MenuItem
+                      product={product}
+                      img={product.img}
+                      title={product.title}
+                      description={product.desc}
+                      prices={product.prices}
+                    />
+                    {/* Cart Badge - Sepetteki ürün sayısını göster */}
+                    {cartCount > 0 && (
+                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                        {cartCount}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Load More Button - Sadece limited view değilse göster */}
